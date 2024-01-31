@@ -1,0 +1,43 @@
+OutputFormat = OVF2_TEXT;
+
+// Material properties
+Msat  = 795774.7 // saturation magnetization (A/m)
+Aex   = 1.3e-11 // exchange constant
+alpha = 0.02 // gilbert damping term
+d_cell := 5e-9 // cubic cell size (m)
+Ku1.setregion(1, 2e9) // uniaxial anisotropy constant
+anisU.setRegion(1, vector(1, 0.01, 0)) // anisotropy direction
+
+
+// External field sweep range (T)
+Bmin := -0.5e-1
+Bmax := 0.5e-1
+Bstep := 0.02e-1
+
+
+// Getting film geometry from image
+cell_count_x := 226
+cell_count_y := 10
+cell_count_z := 1
+SetGridsize(cell_count_x, cell_count_y, cell_count_z)
+SetCellsize(d_cell, d_cell, d_cell)
+EdgeSmooth = 3
+setgeom( imageShape("magnetic_mask.png") )
+saveas(geom, "imageShape")
+
+
+// Energy minimization convergence value
+MinimizerStop = 1e-6
+
+// Initializing magnetization
+B_ext = vector(0,Bmin,0)
+m = randomMag()
+relax()
+
+count := 1
+for B:=Bmin; B<=Bmax; B+=Bstep{
+    B_ext = vector(0, B, 0)
+    minimize()
+    SaveAs(m, sprintf("mag_data_%d", count))
+    count += 1
+}
